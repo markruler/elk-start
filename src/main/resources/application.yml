@@ -1,0 +1,35 @@
+server:
+  port: 8888
+
+elasticsearch:
+  host: 127.0.0.1
+  port: 9200
+
+logging:
+  level:
+    org:
+      springframework:
+        web: debug
+
+spring:
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.Oracle10gDialect
+    # show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  datasource:
+    initialization-mode: always
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+    url: jdbc:oracle:thin:@localhost:1521/xe
+    username: readingbooks
+    password: demo
+  thymeleaf:
+    enabled: true
+    cache: false
+    encoding: UTF-8
+    mode: HTML
+    check-template-location: true
