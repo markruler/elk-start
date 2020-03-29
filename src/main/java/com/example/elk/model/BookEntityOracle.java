@@ -27,6 +27,7 @@ public class BookEntityOracle {
   private String title;
   private String author;
   private String category;
+  private String publisher;
 
   @CreationTimestamp
   private LocalDateTime createDateTime;

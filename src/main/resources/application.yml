@@ -1,5 +1,7 @@
 server:
   port: 8888
+  servlet:
+    context-path: /
 
 elasticsearch:
   host: 127.0.0.1
@@ -7,9 +9,10 @@ elasticsearch:
 
 logging:
   level:
-    org:
-      springframework:
-        web: debug
+    org.elasticsearch: DEBUG
+    org.springframework:
+      web: INFO
+      boot.autoconfigure: INFO
 
 spring:
   jpa:
@@ -33,3 +36,9 @@ spring:
     encoding: UTF-8
     mode: HTML
     check-template-location: true
+  # mvc:
+  #   static-path-pattern: /static/**
+  # resources:
+  #   static-locations:
+  #   - classpath:/static/
+  #   add-mappings: true

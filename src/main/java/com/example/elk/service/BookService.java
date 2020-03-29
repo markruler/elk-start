@@ -1,14 +1,19 @@
 package com.example.elk.service;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import com.example.elk.model.BookEntityES;
 import com.example.elk.model.BookEntityOracle;
 
 public interface BookService {
 
-	List<BookEntityES> getAll();
+  void save(BookEntityOracle book);
+  
+  List<BookEntityES> getAll();
+  
+  Map<LocalDate, Long> getAggregations();
 
-	void save(BookEntityOracle book);
-
+  Map<LocalDate, Map<String, Long>> getCategoryCount();
 }
