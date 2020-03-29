@@ -200,7 +200,7 @@ fetch("/histogram", {
   })
   .then(data => {
     // console.log(data);
-    // testHistogram = data;
+    testHistogram = data;
     line_chart(lineChart, data, option);
     lineChart.resize();
   })
@@ -215,8 +215,13 @@ function line_chart(chart, data, option) {
   // chart.clear();
 
   //차트 옵션 설정
+  const dateHistogram = Object.keys(data);
+  for (let i = 0; i < dateHistogram.length; i++) {
+    dateHistogram[i] = dateHistogram[i].substring(0, 7);
+  }
   option.xAxis = {
-    data: Object.keys(data)
+    // data: Object.keys(data)
+    data: dateHistogram
   };
 
   option.series[0].data = Object.values(data);

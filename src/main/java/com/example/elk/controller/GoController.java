@@ -13,6 +13,11 @@ public class GoController {
     return "pie";
   }
 
+  @GetMapping("/pistogram")
+  public String goPistogram() {
+    return "pistogram";
+  }
+
   @GetMapping("/form")
   public String goForm() {
     return "form";
