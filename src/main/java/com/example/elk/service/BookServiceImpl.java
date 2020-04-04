@@ -4,15 +4,10 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.example.elk.model.BookEntityES;
 import com.example.elk.model.BookEntityOracle;
@@ -30,11 +25,8 @@ import org.elasticsearch.search.aggregations.BucketOrder;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.histogram.ParsedDateHistogram;
-import org.elasticsearch.search.aggregations.bucket.range.DateRangeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
-import org.elasticsearch.search.aggregations.bucket.terms.ParsedTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.stereotype.Service;
 
@@ -60,7 +52,6 @@ public class BookServiceImpl implements BookService {
     Iterable<BookEntityES> result = bookRepositoryES.findAll();
     List<BookEntityES> list = new ArrayList<>();
     result.forEach(book -> {
-      // log.info("service -> book : {}", book);
       list.add(book);
     });
     return list;
@@ -68,32 +59,7 @@ public class BookServiceImpl implements BookService {
 
   @Override
   public Map<LocalDate, Long> getAggregations() {
-    DateRangeAggregationBuilder dateRange =
-      AggregationBuilders
-        .dateRange("date_range")
-        .addRange("now-2M/M", "now-1M/M")
-        .field("createDateTime");
-    
-    TermsAggregationBuilder terms = 
-      AggregationBuilders
-        .terms("category_count")
-        .field("category");
-    
-    AggregationBuilder aggregation =
-      AggregationBuilders
-        .global("group_by_category")
-          .subAggregation(
-            AggregationBuilders
-              .dateRange("date_range")
-              .addRange("now-2M/M", "now-1M/M")
-              .field("createDateTime")
-              .subAggregation(
-                AggregationBuilders
-                  .terms("category_count")
-                  .field("category")
-              )
-          );
-    
+
     AggregationBuilder histogram = 
       AggregationBuilders
         .dateHistogram("books")
@@ -103,13 +69,9 @@ public class BookServiceImpl implements BookService {
     SearchSourceBuilder searchSourceBuilder =
       SearchSourceBuilder
         .searchSource()
-        // .aggregation(aggregation);
         .aggregation(histogram);
-        // .aggregation(dateRange)
-        // .aggregation(terms);
     
     SearchRequest searchRequest = new SearchRequest();
-    // searchRequest.indices("reading_books");
     searchRequest.source(searchSourceBuilder);
     
     Aggregations agg = null;
@@ -117,9 +79,6 @@ public class BookServiceImpl implements BookService {
     try {
       SearchResponse res = client.search(searchRequest, RequestOptions.DEFAULT);
       agg = res.getAggregations();
-      log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-      log.info("res : {}", res);
-      log.info("agg : {}", agg.get("역사"));
       if (agg != null) {
         agg.forEach(consumer -> {
           log.info("result : {}", consumer);
@@ -128,7 +87,6 @@ public class BookServiceImpl implements BookService {
       
       log.info(agg.get("books").toString());
       for (Histogram.Bucket entry : ((ParsedDateHistogram)agg.get("books")).getBuckets()) {
-        // log.info("entry : {}", entry);
         String key = entry.getKeyAsString(); // bucket key
         long docCount = entry.getDocCount(); // Doc count
         log.info("key [{}], doc_count [{}]", key, docCount);
@@ -136,24 +94,10 @@ public class BookServiceImpl implements BookService {
         log.info("string2date : {}", seriesDate);
         map.put(seriesDate, docCount);
       }
-
-      // SearchHits searchHits = res.getHits();
-      // SearchHit[] hits = searchHits.getHits();
-      // for (SearchHit hit : hits) {
-      //   log.info(hit.getSourceAsString());
-      // }
-
-      // XContentBuilder builder = CborXContent.contentBuilder(); 
-      // res.getAggregations().toXContent(builder, ToXContent.EMPTY_PARAMS);
-      // ObjectMapper cborObjectMapper = new ObjectMapper(new CBORFactory());
-      // JsonNode jsonNode = cborObjectMapper.readTree(builder.bytes().streamInput());
-
     } catch (IOException e) {
       e.printStackTrace();
     }
     
-    // SearchRequestBuilder req = new SearchRequestBuilder();
-    // bookRepositoryES.search();
     return map;
   }
 
@@ -175,13 +119,9 @@ public class BookServiceImpl implements BookService {
     SearchSourceBuilder searchSourceBuilder =
       SearchSourceBuilder
         .searchSource()
-        // .aggregation(aggregation);
         .aggregation(pie);
-        // .aggregation(dateRange)
-        // .aggregation(terms);
         
     SearchRequest searchRequest = new SearchRequest();
-    // searchRequest.indices("reading_books");
     searchRequest.source(searchSourceBuilder);
     
     Aggregations agg = null;
@@ -190,23 +130,18 @@ public class BookServiceImpl implements BookService {
     try {
       SearchResponse res = client.search(searchRequest, RequestOptions.DEFAULT);
       agg = res.getAggregations();
-      log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-      log.info("res : {}", res);
       if (agg != null) {
         agg.forEach(consumer -> {
           log.info("result : {}", consumer);
         });
       }
       
-      // log.info(agg.get("books").toString());
       // 날짜별
       for (Histogram.Bucket hBucket : ((ParsedDateHistogram)agg.get("books")).getBuckets()) {
         String histogramKey = hBucket.getKeyAsString(); // bucket key
         long histogramDocCount = hBucket.getDocCount(); // Doc count
         log.info("h! key [{}] / doc_count [{}]", histogramKey, histogramDocCount);
         LocalDate seriesDate = LocalDate.parse(histogramKey.substring(0, 10), DateTimeFormatter.ISO_DATE);
-        log.info("string2date : {}", seriesDate);
-        // map.put(seriesDate, histogramDocCount);
 
         // 분야별
         for (Terms.Bucket tBucket : ((ParsedStringTerms)hBucket.getAggregations().get("category")).getBuckets()) {
@@ -217,22 +152,11 @@ public class BookServiceImpl implements BookService {
         }
 
         superMap.put(seriesDate, map);
-        // log.info("superMap : {}", superMap.get(seriesDate));
         map = new LinkedHashMap<>();
-        // log.info("superMap : {}", superMap.get(seriesDate));
       }
     } catch (IOException e) {
       e.printStackTrace();
     }
-
-    // Flattening Nested Collections in Java
-    // Stream<SimpleEntry<String, Long>> entryStream = 
-    //   superMap.entrySet().stream().flatMap(e -> e.getValue().entrySet().stream().flatMap(v -> Stream.of(new SimpleEntry<>(e.getKey() + "." + v.getKey(), v.getValue()))));
-    // Map<String, Long> collect = entryStream.collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-    // collect.forEach((k, v) -> {
-    //   log.info("key:" + k + " / value:" + v);
-    // });
-    
     return superMap;
   }
   

@@ -33,7 +33,6 @@ public class BookController {
 
   @PostMapping("/insert")
   public String insertBook(@RequestBody BookEntityOracle book) {
-    log.info("book : {}", book);
     bookService.save(book);
     return "success";
   }
@@ -41,14 +40,10 @@ public class BookController {
   @GetMapping("/all")
   public ResponseEntity<List<BookEntityES>> getAll() {
     List<BookEntityES> books = bookService.getAll();
-    // log.info("controller -> books : {}", books);
     return new ResponseEntity<>(books, HttpStatus.OK);
   }
 
-  // @PostMapping(value = "/agg", produces = "application/json;charset=utf8")
   @PostMapping("/agg")
-  // public String analysis(HttpServletRequest req, String requestJson) throws Exception {
-    // String index = new URL(req.getHeader("referer")).getPath();
   public String aggregation(@RequestBody String requestJson) throws Exception {
     String index = "/reading_books/_search";
     JsonElement json = new Gson().toJsonTree(requestJson);
@@ -62,16 +57,12 @@ public class BookController {
   @GetMapping("/histogram")
   public ResponseEntity<Map<LocalDate, Long>> getAggregations() {
     Map<LocalDate, Long> agg = bookService.getAggregations();
-    log.info(agg.keySet().toString());
-    // log.info("controller -> agg : {}", agg.get("group_by_category"));
     return new ResponseEntity<>(agg, HttpStatus.OK);
   }
 
   @GetMapping("/pie")
   public ResponseEntity<Map<LocalDate, Map<String, Long>>> getPie() {
     Map<LocalDate, Map<String, Long>> agg = bookService.getCategoryCount();
-    // log.info(agg.keySet().toString());
-    // log.info("controller -> agg : {}", agg.get("group_by_category"));
     return new ResponseEntity<>(agg, HttpStatus.OK);
   }
 }
